@@ -19,7 +19,10 @@ public class SingleNoteMover : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // TODO Analyze music or keys or something
+        GetComponent<Image>().enabled = (KeyListenerToPos.CurrentNote != null);
+
+        if (KeyListenerToPos.CurrentNote == null) return;
+        
         targetY = KeyListenerToPos.CurrentNote.getPosition();
 
         RectTransform rtrans = gameObject.GetComponent<RectTransform>();
@@ -29,7 +32,5 @@ public class SingleNoteMover : MonoBehaviour
         float nextY = curY + Math.Min(curSpeed, Math.Max(diff, -curSpeed));
 
         rtrans.localPosition = new Vector3(rtrans.localPosition.x, nextY, rtrans.localPosition.z);
-
-        GetComponent<Image>().enabled = !KeyListenerToPos.NothingPlayed;
     }
 }
