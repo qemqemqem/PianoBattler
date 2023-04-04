@@ -47,13 +47,15 @@ public class MicrophoneCapture : MonoBehaviour
 
     public void StartMicrophone()
     {
+        Microphone.End(null);
+        
         goAudioSource.clip = Microphone.Start(null, true, 1, AudioSettings.outputSampleRate);  
         goAudioSource.loop = true;
     }
 
     public void EndMicrophone()
     {
-        Debug.Log("Before Play: " + Microphone.GetPosition(null));
+        // Debug.Log("Before Play: " + Microphone.GetPosition(null));
         goAudioSource.Play(); //Playback the recorded audio    // TODO This seems to be necessary?
         StartCoroutine(ProcessAudioData());
     }
@@ -74,11 +76,9 @@ public class MicrophoneCapture : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(0.01f);
         float[] freqData = new float[frequencyVisualizer.numFrequencies];
-        Debug.Log("Before: " + Microphone.GetPosition(null));
+        // Debug.Log("Before: " + Microphone.GetPosition(null));
         goAudioSource.GetSpectrumData (freqData, 0, FFTWindow.BlackmanHarris);
-        Debug.Log("After: " + Microphone.GetPosition(null));
+        // Debug.Log("After: " + Microphone.GetPosition(null));
         frequencyVisualizer.ShowFreqs(freqData);
-    
-        Microphone.End(null);
     }
 }

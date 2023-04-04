@@ -22,6 +22,12 @@ public class FrequencyVisualizer : MonoBehaviour
         exampleValueDisplayer.SetActive(false);
     }
 
+    public float ProcessFreqFloat(float val, int i)
+    {
+        if (i < 5) return 0;
+        return val * i;
+    }
+
     public void ShowFreqs(float[] vals)
     {
         // Preprocess vals
@@ -29,12 +35,14 @@ public class FrequencyVisualizer : MonoBehaviour
         float valsMax = 0;
         for (int i = 1; i < vals.Length; i++)
         {
-            valsSum += vals[i] * (i+1);
-            if (vals[i] > valsMax) valsMax = vals[i] * (i+1);
+            valsSum += ProcessFreqFloat(vals[i], i);
+            if (vals[i] > valsMax) valsMax = ProcessFreqFloat(vals[i], i);
         }
 
-        for (int i = 0; i < vals.Length; i++)
-            vals[i] /= valsMax;
+        float valsAve = valsSum / vals.Length;
+
+        // for (int i = 0; i < vals.Length; i++)
+        //     vals[i] /= valsMax;
 
         float myHeight = gameObject.GetComponent<RectTransform>().rect.height;
         for (int i = 0; i < numFrequencies; i++)
@@ -45,7 +53,7 @@ public class FrequencyVisualizer : MonoBehaviour
             valueDisplayers[i].GetComponent<RectTransform>().sizeDelta =
                 new Vector2(r.width, myHeight / numFrequencies);
 
-            valueDisplayers[i].GetComponent<Image>().fillAmount = vals[i] * (i+1);
+            valueDisplayers[i].GetComponent<Image>().fillAmount = ProcessFreqFloat(vals[i], i) / (valsAve * 3);
         }
     }
 }
