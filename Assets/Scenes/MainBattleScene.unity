@@ -1091,6 +1091,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   exampleValueDisplayer: {fileID: 2015435359}
   numFrequencies: 256
+  maxFindingSlidingWindow: 10
 --- !u!1 &1864594645
 GameObject:
   m_ObjectHideFlags: 0

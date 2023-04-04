@@ -28,7 +28,7 @@ public class MicrophoneCapture : MonoBehaviour
             if(minFreq == 0 && maxFreq == 0)    
             {    
                 //...meaning 44100 Hz can be used as the recording sampling rate    
-                maxFreq = 44100;    
+                maxFreq = 500;    
             }    
             goAudioSource = this.GetComponent<AudioSource>();    
             Debug.Log("Got Microphone!"); 

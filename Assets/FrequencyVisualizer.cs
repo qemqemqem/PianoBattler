@@ -8,6 +8,9 @@ public class FrequencyVisualizer : MonoBehaviour
     public GameObject exampleValueDisplayer;
     private List<GameObject> valueDisplayers;
     public int numFrequencies = 256;
+    public int maxFindingSlidingWindow = 10;
+
+    public static int peakFreq = 0;
     
     // Start is called before the first frame update
     void Start()
@@ -28,8 +31,33 @@ public class FrequencyVisualizer : MonoBehaviour
         return val * i;
     }
 
+    public void FindPeak(float[] vals) {
+        // Find the segment of length maxFindingSlidingWindow with the highest value
+        float maxVal = 0;
+        int maxIndex = 0;
+        float rollingSum = 0;
+        for (int i = 0; i < vals.Length - maxFindingSlidingWindow; i++)
+        {
+            rollingSum += ProcessFreqFloat(vals[i], i);
+            if (i >= maxFindingSlidingWindow)
+            {
+                rollingSum -= ProcessFreqFloat(vals[i - maxFindingSlidingWindow], i - maxFindingSlidingWindow);
+            }
+         
+            if (rollingSum > maxVal)
+            {
+                maxVal = rollingSum;
+                maxIndex = i - maxFindingSlidingWindow / 2;
+                if (maxIndex < 0) maxIndex = 0;
+            }
+        }
+        peakFreq = maxIndex;
+    }
+
     public void ShowFreqs(float[] vals)
     {
+        FindPeak(vals);
+        
         // Preprocess vals
         float valsSum = 0;
         float valsMax = 0;

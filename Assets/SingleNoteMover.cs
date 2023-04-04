@@ -8,7 +8,7 @@ using Random = UnityEngine.Random;
 public class SingleNoteMover : MonoBehaviour
 {
     private float targetY = 0;
-    static readonly float speed = 200f;
+    static readonly float speed = 500f;
     
     // Start is called before the first frame update
     void Start()
@@ -19,11 +19,12 @@ public class SingleNoteMover : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        GetComponent<Image>().enabled = (KeyListenerToPos.CurrentNote != null);
+        GetComponent<Image>().enabled = true;//(KeyListenerToPos.CurrentNote != null);
 
-        if (KeyListenerToPos.CurrentNote == null) return;
+        // if (KeyListenerToPos.CurrentNote == null) return;
         
-        targetY = KeyListenerToPos.CurrentNote.getPosition();
+        // targetY = KeyListenerToPos.CurrentNote.getPosition();
+        targetY = FrequencyVisualizer.peakFreq * 500f / 256f - 250;
 
         RectTransform rtrans = gameObject.GetComponent<RectTransform>();
         float curY = rtrans.localPosition.y;
