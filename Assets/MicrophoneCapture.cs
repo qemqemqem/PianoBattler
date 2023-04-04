@@ -11,6 +11,8 @@ public class MicrophoneCapture : MonoBehaviour
     private int maxFreq;    
     private AudioSource goAudioSource;
     public FrequencyVisualizer frequencyVisualizer;
+    
+    private float lastCallTime = 0f;
      
     void Start()     
     {    
@@ -35,45 +37,45 @@ public class MicrophoneCapture : MonoBehaviour
     
     void Update()     
     {
-        if(micConnected)    
-        {    
-            if(!Microphone.IsRecording(null))    
-            {    
-                // Debug.Log("Not Recording");
-            }    
-            else //Recording is in progress    
-            {    
-                // Debug.Log("Recording");
-            }    
-        }    
-        else    
-        {    
-            // Debug.Log("No Microphone");
-        }    
-    
+        float timeSinceLastCall = Time.time - lastCallTime;
+        if (timeSinceLastCall >= 0.2f)
+        {
+            lastCallTime = Time.time;
+            StartStop();
+        }
+    }
+
+    public void StartMicrophone()
+    {
+        goAudioSource.clip = Microphone.Start(null, true, 1, AudioSettings.outputSampleRate);  
+        goAudioSource.loop = true;
+    }
+
+    public void EndMicrophone()
+    {
+        Debug.Log("Before Play: " + Microphone.GetPosition(null));
+        goAudioSource.Play(); //Playback the recorded audio    // TODO This seems to be necessary?
+        StartCoroutine(ProcessAudioData());
     }
 
     public void StartStop()
     {
         if (!Microphone.IsRecording(null))
         {
-            goAudioSource.clip = Microphone.Start(null, true, 1, AudioSettings.outputSampleRate);  
-            goAudioSource.loop = true;
+            StartMicrophone();
         }
         else
         {
-            Debug.Log("Before Play: " + Microphone.GetPosition(null));
-            goAudioSource.Play(); //Playback the recorded audio    
-            StartCoroutine(ProcessAudioData());
+            EndMicrophone();
         }
     }
 
     private IEnumerator ProcessAudioData()
     {
-        yield return new WaitForSecondsRealtime(0.1f); // Wait for 1 second
+        yield return new WaitForSecondsRealtime(0.01f);
         float[] freqData = new float[frequencyVisualizer.numFrequencies];
         Debug.Log("Before: " + Microphone.GetPosition(null));
-        goAudioSource.GetSpectrumData (freqData, 0, FFTWindow.Triangle); //, FFTWindow.BlackmanHarris);
+        goAudioSource.GetSpectrumData (freqData, 0, FFTWindow.BlackmanHarris);
         Debug.Log("After: " + Microphone.GetPosition(null));
         frequencyVisualizer.ShowFreqs(freqData);
     
