@@ -1,17 +1,26 @@
 import pyaudio
 import numpy as np
+import pygame
+import sys
 
 # Constants
 FORMAT = pyaudio.paFloat32
 CHANNELS = 1
 RATE = 44100
 CHUNK = int(RATE * 0.03)  # 30ms of audio
+WIDTH, HEIGHT = 800, 600  # Window size
 
 # Initialize PyAudio
 p = pyaudio.PyAudio()
 
 # Open stream
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+
+# Initialize Pygame
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Frequency Spectrum')
+
 
 def find_fundamental_frequency(audio_data, sample_rate):
     # Perform autocorrelation
@@ -30,8 +39,21 @@ def find_fundamental_frequency(audio_data, sample_rate):
         return 1.0 / period
     return 0
 
+
+def draw_bar(screen, x, y, width, height, color):
+    pygame.draw.rect(screen, color, (x, y, width, height))
+
 try:
     while True:
+        # Handle Pygame events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                stream.stop_stream()
+                stream.close()
+                p.terminate()
+                pygame.quit()
+                sys.exit()
+
         # Read audio stream
         data = stream.read(CHUNK)
         # Convert to NumPy array
@@ -41,8 +63,28 @@ try:
         frequency = find_fundamental_frequency(audio_data, RATE)
         print(f"Fundamental Frequency: {frequency:.2f} Hz")
 
+        # Compute FFT
+        fft_data = np.fft.rfft(audio_data)
+        fft_freq = np.fft.rfftfreq(CHUNK, d=1./RATE)
+        fft_magnitude = np.abs(fft_data)
+
+        # Clear screen
+        screen.fill((0, 0, 0))
+
+        # Draw bars for each frequency
+        bar_width = WIDTH // len(fft_freq)
+        for i, freq in enumerate(fft_freq):
+            x = i * bar_width
+            y = HEIGHT
+            height = fft_magnitude[i] / 100 * HEIGHT # Scale for display
+            draw_bar(screen, x, HEIGHT - height, bar_width + 1, height, (0, 255, 0))
+
+        pygame.display.flip()
+
 except KeyboardInterrupt:
     # Stop and close the stream and PyAudio
     stream.stop_stream()
     stream.close()
     p.terminate()
+    pygame.quit()
+    sys.exit()
