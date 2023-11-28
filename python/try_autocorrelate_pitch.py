@@ -65,6 +65,24 @@ class FrequencyHistory:
 frequency_history = FrequencyHistory(num_frequencies=512, decay_rate=0.01)
 
 
+# For Scoring
+
+def calculate_pitch_accuracy(fundamental_freq, target_freq, accuracy_threshold=5):
+    deviation = abs(fundamental_freq - target_freq)
+    if deviation < accuracy_threshold:
+        return 1.0  # Perfect score
+    else:
+        return max(0, 1 - deviation / target_freq)  # Decrease score as deviation increases
+
+def calculate_peak_strength_score(fft_magnitude, target_freq, fft_freq, bandwidth=10):
+    # Find index of target frequency
+    target_index = np.argmin(np.abs(fft_freq - target_freq))
+    # Define range around target frequency
+    start_index = max(0, target_index - bandwidth)
+    end_index = min(len(fft_freq), target_index + bandwidth)
+    # Calculate the strength score
+    peak_strength = np.max(fft_magnitude[start_index:end_index])
+    return peak_strength / np.sum(fft_magnitude)
 
 def find_fundamental_frequency(audio_data, sample_rate):
     # Perform autocorrelation
@@ -128,9 +146,9 @@ try:
         # Convert to NumPy array
         audio_data = np.frombuffer(data, dtype=np.float32)
 
-        # Find and print fundamental frequency
-        frequency = find_fundamental_frequency(audio_data, RATE)
-        print(f"Fundamental Frequency: {frequency:.2f} Hz")
+        # Find fundamental frequency
+        fundamental_freq = find_fundamental_frequency(audio_data, RATE)
+        # print(f"Fundamental Frequency: {fundamental_freq:.2f} Hz")
 
         # Compute FFT
         fft_data = np.fft.rfft(audio_data)
@@ -146,6 +164,14 @@ try:
         # Interpolate the FFT data onto the logarithmic scale
         magnitude_interpolator = interp1d(fft_freq, fft_magnitude, bounds_error=False, fill_value=0)
         log_magnitude = magnitude_interpolator(log_freq)
+
+        # Scoring
+        target_note_freq = 261.63  # Middle C frequency
+        pitch_accuracy_score = calculate_pitch_accuracy(fundamental_freq, target_note_freq)
+        peak_strength_score = calculate_peak_strength_score(fft_magnitude, target_note_freq, fft_freq)
+
+        # Print fundamental frequency and score
+        print(f"Fundamental Frequency: {fundamental_freq:.2f} Hz,\t Pitch Accuracy: {pitch_accuracy_score:.2f},\t Peak Strength: {peak_strength_score:.2f}")
 
         # Apply A-weighting to the FFT magnitudes
         a_weighted_fft = log_magnitude * a_weighting_and_bandpass_filter(log_freq)
