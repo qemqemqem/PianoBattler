@@ -101,6 +101,13 @@ def find_fundamental_frequency(audio_data, sample_rate):
         return 1.0 / period
     return 0
 
+def find_target_note_index(target_freq, fft_freq, display_freqs):
+    # Find the closest frequency index in the FFT result to the target frequency
+    target_index = np.argmin(np.abs(fft_freq - target_freq))
+    # Scale it to the display index
+    display_index = int(np.interp(target_index, [0, len(fft_freq)], [0, len(display_freqs)]))
+    return display_index
+
 def convert_to_decibels(fft_magnitude):
     # Avoid log of zero by adding a small number
     magnitude_db = 20 * np.log10(fft_magnitude + 1e-6)
@@ -156,7 +163,7 @@ try:
         fft_magnitude = np.abs(fft_data)
 
         # Logarithmic scale frequency bins
-        min_freq = 200  # Minimum frequency (e.g., 20 Hz)
+        min_freq = 20  # Minimum frequency (e.g., 20 Hz)
         max_freq = RATE / 2  # Nyquist frequency
         num_bins = 512  # Number of bins in the logarithmic scale
         log_freq = np.logspace(np.log10(min_freq), np.log10(max_freq), num_bins)
@@ -166,7 +173,8 @@ try:
         log_magnitude = magnitude_interpolator(log_freq)
 
         # Scoring
-        target_note_freq = 261.63  # Middle C frequency
+        # target_note_freq = 261.63  # Middle C frequency
+        target_note_freq = 2000
         pitch_accuracy_score = calculate_pitch_accuracy(fundamental_freq, target_note_freq)
         peak_strength_score = calculate_peak_strength_score(fft_magnitude, target_note_freq, fft_freq)
 
@@ -192,6 +200,7 @@ try:
         screen.fill((0, 0, 0))
 
         # Draw bars for each frequency
+        target_index = find_target_note_index(target_note_freq, log_freq, display_freqs)
         bar_width = 2 # WIDTH // len(display_freqs)
         for i, freq in enumerate(display_freqs):
             x = i * bar_width
@@ -199,6 +208,13 @@ try:
             # height = fft_magnitude[i] / 100 * HEIGHT # Scale for display
             height = np.interp(display_freqs[i], [0, 1], [0, HEIGHT])  # Scale dB to screen height
             draw_bar(screen, x, HEIGHT - height, bar_width + 1, height, (0, 255, 0))
+
+        # Draw a red box around the target note
+        box_size = 10
+        x = (target_index - box_size // 2) * bar_width
+        red_box_height = HEIGHT  # Height of the box
+        red_box_width = bar_width * box_size  # Width of the box
+        pygame.draw.rect(screen, (255, 0, 0), (x, 0, red_box_width, red_box_height), 2)  # 2 is the thickness of the box
 
         pygame.display.flip()
 
