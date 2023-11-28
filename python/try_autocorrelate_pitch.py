@@ -9,7 +9,7 @@ FORMAT = pyaudio.paFloat32
 CHANNELS = 1
 RATE = 44100
 CHUNK = int(RATE * 0.03)  # 30ms of audio
-WIDTH, HEIGHT = 800, 600  # Window size
+WIDTH, HEIGHT = 1100, 800  # Window size
 
 # Initialize PyAudio
 p = pyaudio.PyAudio()
@@ -166,7 +166,7 @@ try:
         screen.fill((0, 0, 0))
 
         # Draw bars for each frequency
-        bar_width = WIDTH // len(display_freqs)
+        bar_width = 2 # WIDTH // len(display_freqs)
         for i, freq in enumerate(display_freqs):
             x = i * bar_width
             y = HEIGHT
