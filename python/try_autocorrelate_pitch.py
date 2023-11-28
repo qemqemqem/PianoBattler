@@ -135,11 +135,17 @@ try:
         # Apply A-weighting to the FFT magnitudes
         a_weighted_fft = fft_magnitude * a_weighting_curve(fft_freq)
 
+        # Convert to decibels
+        freqs_in_decibels = convert_to_decibels(a_weighted_fft)
+
         # Smoothing
-        frequency_history.update(a_weighted_fft)
+        frequency_history.update(freqs_in_decibels)
         smoothed_frequency = frequency_history.get_smoothed_frequency()
 
         display_freqs = smoothed_frequency
+
+        # Norrmalize 0-1
+        display_freqs = display_freqs / max(np.max(display_freqs), 45)
 
         # Clear screen
         screen.fill((0, 0, 0))
@@ -150,8 +156,7 @@ try:
             x = i * bar_width
             y = HEIGHT
             # height = fft_magnitude[i] / 100 * HEIGHT # Scale for display
-            magnitude_db = convert_to_decibels(display_freqs[i])
-            height = np.interp(magnitude_db, [0, 60], [0, HEIGHT])  # Scale dB to screen height
+            height = np.interp(display_freqs[i], [0, 1], [0, HEIGHT])  # Scale dB to screen height
             draw_bar(screen, x, HEIGHT - height, bar_width + 1, height, (0, 255, 0))
 
         pygame.display.flip()
