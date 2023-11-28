@@ -1,5 +1,6 @@
 import pyaudio
 import numpy as np
+from scipy.interpolate import interp1d
 import pygame
 import sys
 
@@ -61,7 +62,7 @@ class FrequencyHistory:
 
 
 # TODO a better way to get this number
-frequency_history = FrequencyHistory(num_frequencies=662, decay_rate=0.01)
+frequency_history = FrequencyHistory(num_frequencies=512, decay_rate=0.01)
 
 
 
@@ -87,20 +88,24 @@ def convert_to_decibels(fft_magnitude):
     magnitude_db = 20 * np.log10(fft_magnitude + 1e-6)
     return np.clip(magnitude_db, -60, None)  # Clip values below -60 dB
 
-
-def a_weighting_curve(frequencies):
-    """ Calculate A-weighting for each frequency. """
+def a_weighting_and_bandpass_filter(frequencies):
+    """ Calculate A-weighting for each frequency and apply bandpass filtering. """
+    # Constants for A-weighting
     c1 = 20.6 ** 2
     c2 = 107.7 ** 2
     c3 = 737.9 ** 2
     c4 = 12200 ** 2
 
+    # A-weighting calculation
     numerator = c4 * frequencies ** 4
-    denominator = ((frequencies ** 2 + c1) * np.sqrt((frequencies ** 2 + c2) * (frequencies ** 2 + c3)) * (
-                frequencies ** 2 + c4))
-
+    denominator = ((frequencies ** 2 + c1) * np.sqrt((frequencies ** 2 + c2) * (frequencies ** 2 + c3)) * (frequencies ** 2 + c4))
     a_weighting = numerator / denominator
-    a_weighting[frequencies < 20] = 0  # A-weighting not valid below 20 Hz
+
+    # Apply bandpass filter
+    low_cutoff = 20  # 20 Hz
+    high_cutoff = 20000  # 20 kHz
+    a_weighting[(frequencies < low_cutoff) | (frequencies > high_cutoff)] = 0
+
     return a_weighting
 
 
@@ -132,8 +137,18 @@ try:
         fft_freq = np.fft.rfftfreq(CHUNK, d=1./RATE)
         fft_magnitude = np.abs(fft_data)
 
+        # Logarithmic scale frequency bins
+        min_freq = 200  # Minimum frequency (e.g., 20 Hz)
+        max_freq = RATE / 2  # Nyquist frequency
+        num_bins = 512  # Number of bins in the logarithmic scale
+        log_freq = np.logspace(np.log10(min_freq), np.log10(max_freq), num_bins)
+
+        # Interpolate the FFT data onto the logarithmic scale
+        magnitude_interpolator = interp1d(fft_freq, fft_magnitude, bounds_error=False, fill_value=0)
+        log_magnitude = magnitude_interpolator(log_freq)
+
         # Apply A-weighting to the FFT magnitudes
-        a_weighted_fft = fft_magnitude * a_weighting_curve(fft_freq)
+        a_weighted_fft = log_magnitude * a_weighting_and_bandpass_filter(log_freq)
 
         # Convert to decibels
         freqs_in_decibels = convert_to_decibels(a_weighted_fft)

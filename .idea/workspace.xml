@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="477c71a1-05c9-492c-818a-6fc4c5516584" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/python/try_autocorrelate_pitch.py" beforeDir="false" afterPath="$PROJECT_DIR$/python/try_autocorrelate_pitch.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
