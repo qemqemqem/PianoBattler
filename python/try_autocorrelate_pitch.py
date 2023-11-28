@@ -45,6 +45,22 @@ def convert_to_decibels(fft_magnitude):
     return np.clip(magnitude_db, -60, None)  # Clip values below -60 dB
 
 
+def a_weighting_curve(frequencies):
+    """ Calculate A-weighting for each frequency. """
+    c1 = 20.6 ** 2
+    c2 = 107.7 ** 2
+    c3 = 737.9 ** 2
+    c4 = 12200 ** 2
+
+    numerator = c4 * frequencies ** 4
+    denominator = ((frequencies ** 2 + c1) * np.sqrt((frequencies ** 2 + c2) * (frequencies ** 2 + c3)) * (
+                frequencies ** 2 + c4))
+
+    a_weighting = numerator / denominator
+    a_weighting[frequencies < 20] = 0  # A-weighting not valid below 20 Hz
+    return a_weighting
+
+
 def draw_bar(screen, x, y, width, height, color):
     pygame.draw.rect(screen, color, (x, y, width, height))
 
@@ -73,12 +89,15 @@ try:
         fft_freq = np.fft.rfftfreq(CHUNK, d=1./RATE)
         fft_magnitude = np.abs(fft_data)
 
+        # Apply A-weighting to the FFT magnitudes
+        a_weighted_fft = fft_magnitude * a_weighting_curve(fft_freq)
+
         # Clear screen
         screen.fill((0, 0, 0))
 
         # Draw bars for each frequency
-        bar_width = WIDTH // len(fft_freq)
-        for i, freq in enumerate(fft_freq):
+        bar_width = WIDTH // len(a_weighted_fft)
+        for i, freq in enumerate(a_weighted_fft):
             x = i * bar_width
             y = HEIGHT
             # height = fft_magnitude[i] / 100 * HEIGHT # Scale for display
