@@ -39,6 +39,11 @@ def find_fundamental_frequency(audio_data, sample_rate):
         return 1.0 / period
     return 0
 
+def convert_to_decibels(fft_magnitude):
+    # Avoid log of zero by adding a small number
+    magnitude_db = 20 * np.log10(fft_magnitude + 1e-6)
+    return np.clip(magnitude_db, -60, None)  # Clip values below -60 dB
+
 
 def draw_bar(screen, x, y, width, height, color):
     pygame.draw.rect(screen, color, (x, y, width, height))
@@ -76,7 +81,9 @@ try:
         for i, freq in enumerate(fft_freq):
             x = i * bar_width
             y = HEIGHT
-            height = fft_magnitude[i] / 100 * HEIGHT # Scale for display
+            # height = fft_magnitude[i] / 100 * HEIGHT # Scale for display
+            magnitude_db = convert_to_decibels(fft_magnitude[i])
+            height = np.interp(magnitude_db, [0, 60], [0, HEIGHT])  # Scale dB to screen height
             draw_bar(screen, x, HEIGHT - height, bar_width + 1, height, (0, 255, 0))
 
         pygame.display.flip()
